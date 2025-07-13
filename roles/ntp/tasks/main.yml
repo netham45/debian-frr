@@ -1,0 +1,25 @@
+---
+- name: Install chrony
+  apt:
+    name: chrony
+    state: present
+
+- name: Configure chrony for container
+  lineinfile:
+    path: /etc/default/chrony
+    regexp: '^DAEMON_OPTS='
+    line: 'DAEMON_OPTS="-x"'
+    create: yes
+  notify: restart chrony
+
+- name: Configure chrony
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+  notify: restart chrony
+
+- name: Ensure chrony is running and enabled
+  service:
+    name: chrony
+    state: started
+    enabled: yes

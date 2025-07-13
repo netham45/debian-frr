@@ -1,0 +1,35 @@
+server:
+  # Interfaces
+{% for iface in dns_unbound_interfaces %}
+  interface: {{ iface }}
+{% endfor %}
+
+  # Access Control
+{% for network in dns_access_control %}
+  access-control: {{ network }} allow
+{% endfor %}
+
+  # Security
+  hide-identity: yes
+  hide-version: yes
+
+  # Performance
+  prefetch: yes
+
+  # Host Overrides
+{% for host in dns_host_overrides %}
+  local-data: "{{ host.name }} A {{ host.ip }}"
+{% endfor %}
+
+# Domain Overrides
+{% for domain in dns_domain_overrides %}
+forward-zone:
+  name: "{{ domain.domain }}"
+{% for server in domain.servers %}
+  forward-addr: {{ server }}
+{% endfor %}
+{% endfor %}
+forward-zone:
+  name: "."
+  forward-addr: 4.2.2.2
+  forward-addr: 8.8.8.8

@@ -1,0 +1,13 @@
+---
+- name: Configure network interfaces
+  template:
+    src: interface.network.j2
+    dest: "/etc/systemd/network/10-{{ item.name }}.network"
+  with_items: "{{ network_interfaces }}"
+  notify: restart networkd
+
+- name: Enable and start systemd-networkd
+  systemd:
+    name: systemd-networkd
+    enabled: yes
+    state: started

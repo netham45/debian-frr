@@ -1,0 +1,14 @@
+[Unit]
+Description=SQM (tc) for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/sqm-apply-%i.sh
+RemainAfterExit=yes
+ExecStop=/usr/bin/tc qdisc del dev %i root
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

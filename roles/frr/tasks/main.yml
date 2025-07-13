@@ -1,0 +1,24 @@
+---
+- name: Install FRR
+  apt:
+    name: frr
+    state: present
+
+- name: Enable OSPF daemon
+  lineinfile:
+    path: /etc/frr/daemons
+    regexp: '^ospfd=no'
+    line: 'ospfd=yes'
+  notify: restart frr
+
+- name: Configure frr.conf
+  template:
+    src: frr.conf.j2
+    dest: /etc/frr/frr.conf
+  notify: restart frr
+
+- name: Enable and start FRR service
+  systemd:
+    name: frr
+    enabled: yes
+    state: started

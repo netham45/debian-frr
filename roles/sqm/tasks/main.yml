@@ -1,0 +1,23 @@
+---
+- name: Deploy SQM tc script for each WAN interface
+  template:
+    src: sqm-apply.sh.j2
+    dest: "/usr/local/sbin/sqm-apply-{{ item.name }}.sh"
+    mode: '0755'
+  loop: "{{ sqm_interfaces }}"
+  notify: Restart SQM service
+
+- name: Deploy SQM systemd service unit
+  template:
+    src: sqm-tc.service.j2
+    dest: "/etc/systemd/system/sqm-tc@.service"
+    mode: '0644'
+  notify: Restart SQM service
+
+- name: Enable and start SQM service for each WAN interface
+  systemd:
+    name: "sqm-tc@{{ item.name }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  loop: "{{ sqm_interfaces }}"

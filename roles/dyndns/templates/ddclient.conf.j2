@@ -1,0 +1,15 @@
+# ddclient configuration file
+daemon=300
+ssl=yes
+
+{% for config in ddns_configs %}
+# =================================================================
+# Configuration for {{ config.interface }}
+# =================================================================
+use=if, if={{ config.interface }}
+protocol=cloudflare, \
+zone={{ config.zone }}, \
+login=, \
+password='{{ ddns_cloudflare_token }}'
+{{ config.records | join('.' + config.zone + ",") }}.{{ config.zone }}
+{% endfor %}

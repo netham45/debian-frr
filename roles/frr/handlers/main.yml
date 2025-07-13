@@ -1,0 +1,5 @@
+---
+- name: restart frr
+  systemd:
+    name: frr
+    state: restarted

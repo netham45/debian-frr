@@ -1,0 +1,2 @@
+.secrets/**
+host_vars/frr-router/cloudflare_ddns_domains.yaml

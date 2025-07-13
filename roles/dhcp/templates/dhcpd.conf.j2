@@ -1,0 +1,26 @@
+# dhcpd.conf
+
+# Global Options
+default-lease-time 86400;
+max-lease-time 259260;
+authoritative;
+log-facility local7;
+option domain-name "{{ dns_domain_overrides[0].domain | replace('.', '') }}";
+option domain-search "{{ dns_domain_overrides[0].domain | replace('.', '') }}", "netham45.org";
+
+# Subnets
+{% for subnet in dhcp_subnets %}
+subnet {{ subnet.network }} netmask {{ subnet.netmask }} {
+  range {{ subnet.range }};
+  option routers {{ subnet.routers }};
+  option domain-name-servers {{ subnet.domain_name_servers }};
+}
+{% endfor %}
+
+# Static Maps
+{% for map in dhcp_static_maps %}
+host {{ map.name }} {
+  hardware ethernet {{ map.mac }};
+  fixed-address {{ map.ip }};
+}
+{% endfor %}

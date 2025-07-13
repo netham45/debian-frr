@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Apply CAKE SQM to {{ item.name }} using an IFB device (assuming module is built-in).
+#
+
+# Interface configuration
+IFACE={{ item.name }}
+DOWNLOAD_KBIT={{ (item.download_mbps * 1000) | int }}
+UPLOAD_KBIT={{ (item.upload_mbps * 1000) | int }}
+IFB_DEV=ifb-{{ item.name }}
+
+# Stop script if commands fail
+set -e
+
+# --- Cleanup ---
+# Clean up previous qdiscs and IFB device to ensure a clean state.
+/sbin/tc qdisc del dev $IFACE root 2>/dev/null || true
+/sbin/tc qdisc del dev $IFACE ingress 2>/dev/null || true
+ip link del $IFB_DEV 2>/dev/null || true
+
+# --- Setup ---
+# Create the IFB device and bring it up.
+# We assume the 'ifb' module is built into the kernel, so we don't run modprobe.
+ip link add $IFB_DEV type ifb
+ip link set dev $IFB_DEV up
+
+# --- Egress Shaping (Upload) ---
+# Apply CAKE qdisc with per-flow queueing to distribute CPU load.
+/sbin/tc qdisc add dev $IFACE root cake bandwidth ${UPLOAD_KBIT}kbit flows
+
+# --- Ingress Shaping (Download) ---
+# Redirect all ingress traffic from the physical interface to the IFB.
+/sbin/tc qdisc add dev $IFACE handle ffff: ingress
+/sbin/tc filter add dev $IFACE parent ffff: protocol all u32 match u32 0 0 action mirred egress redirect dev $IFB_DEV
+
+# Apply CAKE qdisc to the IFB device with NAT and per-flow queueing.
+/sbin/tc qdisc add dev $IFB_DEV root cake bandwidth ${DOWNLOAD_KBIT}kbit flows

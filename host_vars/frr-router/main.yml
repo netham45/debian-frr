@@ -1,0 +1,149 @@
+---
+# Network Interface Configuration
+network_interfaces:
+  - name: eth0
+    ip_address: 192.168.0.7/24
+    anycast_gateway: 192.168.0.2/32
+    description: "Management"
+  - name: eth1
+    dhcp: true
+    description: "Primary WAN"
+    metric: 1024
+  - name: eth2
+    ip_address: 192.168.3.7/24
+    anycast_gateway: 192.168.3.2/32
+    description: "Guest"
+  - name: eth3
+    ip_address: 192.168.4.7/24
+    anycast_gateway: 192.168.4.2/32
+    description: "VM"
+  - name: eth4
+    ip_address: 192.168.5.7/24
+    description: "IoT"
+  - name: eth5
+    ip_address: 192.168.6.7/24
+    anycast_gateway: 192.168.6.2/32
+    description: "Camera"
+  - name: eth6
+    dhcp: true
+    description: "Secondary WAN"
+    metric: 2048
+  - name: eth99
+    ip_address: 10.255.255.7/24
+    description: "OSPF Backhaul"
+
+# OSPF Configuration
+ospf_router_id: 192.168.0.7
+ospf_passive_interfaces:
+  - eth0
+  - eth1
+  - eth2
+  - eth3
+  - eth4
+  - eth5
+  - eth6
+ospf_active_networks:
+  - 10.255.255.0/24
+ospf_passive_networks:
+  - 192.168.0.0/24
+  - 192.168.3.0/24
+  - 192.168.4.0/24
+  - 192.168.5.0/24
+  - 192.168.6.0/24
+
+# DHCP Configuration
+dhcp_subnets:
+  - network: 192.168.0.0
+    netmask: 255.255.255.0
+    range: "192.168.0.100 192.168.0.200"
+    routers: 192.168.0.2
+    domain_name_servers: 192.168.0.7
+  - network: 192.168.3.0
+    netmask: 255.255.255.0
+    range: "192.168.3.50 192.168.3.240"
+    routers: 192.168.3.2
+    domain_name_servers: 192.168.3.7
+  - network: 192.168.4.0
+    netmask: 255.255.255.0
+    range: "192.168.4.100 192.168.4.200"
+    routers: 192.168.4.2
+    domain_name_servers: 192.168.4.7
+  - network: 192.168.5.0
+    netmask: 255.255.255.0
+    range: "192.168.5.100 192.168.5.200"
+    routers: 192.168.5.2
+    domain_name_servers: 192.168.5.7
+  - network: 192.168.6.0
+    netmask: 255.255.255.0
+    range: "192.168.6.100 192.168.6.200"
+    routers: 192.168.6.2
+    domain_name_servers: 192.168.6.7
+
+dhcp_static_maps:
+  - name: Frigate
+    mac: de:20:bc:52:4f:08
+    ip: 192.168.0.164
+
+# DNS Configuration
+dns_unbound_interfaces:
+  - 192.168.0.7
+  - 192.168.3.7
+  - 192.168.4.7
+  - 192.168.5.7
+  - 192.168.6.7
+dns_access_control:
+  - "192.168.0.0/24"
+  - "192.168.3.0/24"
+  - "192.168.4.0/24"
+  - "192.168.5.0/24"
+  - "192.168.6.0/24"
+dns_host_overrides:
+  - name: "homeassistant.netham45.org."
+    ip: "192.168.3.144"
+  - name: "docker-registry.netham45.org."
+    ip: "192.168.0.158"
+#dns_domain_overrides:
+#  - domain: "example.com."
+#    servers:
+#      - 192.168.0.10
+#      - 192.168.0.11
+
+# WireGuard Configuration
+wireguard_private_key: "{{ lookup('file', '.secrets/wireguard_private_key') }}"
+wireguard_listen_port: 51820
+wireguard_address: 192.168.251.3/24
+wireguard_subnet: 192.168.251.0/24
+wireguard_peers:
+  - public_key: "{{ lookup('file', '.secrets/wireguard_public_key') }}"
+    allowed_ips: 192.168.251.2/32
+
+# Dynamic DNS Configuration
+ddns_cloudflare_token: "{{ lookup('file', '.secrets/cloudflare_token') }}"
+
+# NTP Configuration
+ntp_allow_networks:
+ - 192.168.0.0/24
+ - 192.168.3.0/24
+ - 192.168.4.0/24
+ - 192.168.5.0/24
+ - 192.168.6.0/24
+
+# SQM Configuration
+sqm_interfaces:
+  - name: eth1
+    description: "Primary WAN"
+    download_mbps: 2700
+    upload_mbps: 2700
+  - name: eth6
+    description: "Secondary WAN"
+    download_mbps: 120
+    upload_mbps: 120
+
+# Port Forwarding
+port_forwards:
+  - forward:
+        proto: tcp
+        source_port: 80
+        allowed_sources: "@cloudflare_ipv4"
+        destination_ip: 192.168.0.158
+        destination_port: 8080

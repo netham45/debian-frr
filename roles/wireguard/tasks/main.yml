@@ -1,0 +1,20 @@
+---
+- name: Install WireGuard
+  apt:
+    name: wireguard-tools
+    state: present
+
+- name: Configure WireGuard interface
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: 0600
+  notify: restart wireguard
+
+- name: Enable and start WireGuard service
+  systemd:
+    name: wg-quick@wg0
+    enabled: yes
+    state: started

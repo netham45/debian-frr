@@ -1,0 +1,26 @@
+!
+frr version 8.4
+frr defaults traditional
+hostname frr-router
+log syslog
+!
+router ospf
+  ospf router-id {{ ospf_router_id }}
+  redistribute connected
+  default-information originate
+  !
+  ! Passive interfaces
+  !
+{% for iface in ospf_passive_interfaces %}
+  passive-interface {{ iface }}
+{% endfor %}
+  !
+  ! Networks
+  !
+{% for network in ospf_passive_networks %}
+  network {{ network }} area 0.0.0.0
+{% endfor %}
+{% for network in ospf_active_networks %}
+  network {{ network }} area 0.0.0.0
+{% endfor %}
+!

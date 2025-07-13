@@ -1,0 +1,20 @@
+---
+- name: Configure Debian Router
+  hosts: frr_router
+  become: yes
+
+  pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      changed_when: false
+  roles:
+    - role: network
+    - role: frr
+    - role: firewall
+    - role: dhcp
+    - role: dns
+    - role: wireguard
+    - role: dyndns
+    - role: ntp
+    # - role: sqm # Disable SQM for now until I get performance issues addressed

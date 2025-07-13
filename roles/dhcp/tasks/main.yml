@@ -1,0 +1,23 @@
+---
+- name: Install ISC DHCP Server
+  apt:
+    name: isc-dhcp-server
+    state: present
+
+- name: Configure DHCP server to listen on correct interfaces
+  template:
+    src: isc-dhcp-server.j2
+    dest: /etc/default/isc-dhcp-server
+  notify: restart dhcpd
+
+- name: Configure DHCP scopes and static maps
+  template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+  notify: restart dhcpd
+
+- name: Enable and start ISC DHCP Server
+  systemd:
+    name: isc-dhcp-server
+    enabled: yes
+    state: started

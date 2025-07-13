@@ -1,0 +1,7 @@
+#ddns_configs:
+#  - interface: eth1
+#    zone: <cloudflare zone>
+#    records:
+#      - "*"
+#      - "@"
+#      - "<subdomain>"

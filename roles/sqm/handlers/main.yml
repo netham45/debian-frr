@@ -1,0 +1,7 @@
+---
+- name: Restart SQM service
+  systemd:
+    name: "sqm-tc@{{ item.name }}"
+    state: restarted
+    daemon_reload: yes
+  loop: "{{ sqm_interfaces }}"
