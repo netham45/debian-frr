@@ -78,7 +78,9 @@ dhcp_subnets:
     range: "192.168.6.100 192.168.6.200"
     routers: 192.168.6.2
     domain_name_servers: 192.168.6.7
-
+dns_domain_name: "netham45.org"
+dns_search_paths:
+  - "netham45.org"
 dhcp_static_maps:
   - name: Frigate
     mac: de:20:bc:52:4f:08
@@ -102,7 +104,8 @@ dns_host_overrides:
     ip: "192.168.3.144"
   - name: "docker-registry.netham45.org."
     ip: "192.168.0.158"
-#dns_domain_overrides:
+dns_domain_overrides:
+  - ~
 #  - domain: "example.com."
 #    servers:
 #      - 192.168.0.10

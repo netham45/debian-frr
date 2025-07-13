@@ -18,16 +18,20 @@ server:
 
   # Host Overrides
 {% for host in dns_host_overrides %}
+{% if host %}
   local-data: "{{ host.name }} A {{ host.ip }}"
+{% endif %}
 {% endfor %}
 
 # Domain Overrides
 {% for domain in dns_domain_overrides %}
+{% if domain %}
 forward-zone:
   name: "{{ domain.domain }}"
 {% for server in domain.servers %}
   forward-addr: {{ server }}
 {% endfor %}
+{% endif %}
 {% endfor %}
 forward-zone:
   name: "."

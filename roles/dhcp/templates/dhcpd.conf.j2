@@ -5,8 +5,8 @@ default-lease-time 86400;
 max-lease-time 259260;
 authoritative;
 log-facility local7;
-option domain-name "{{ dns_domain_overrides[0].domain | replace('.', '') }}";
-option domain-search "{{ dns_domain_overrides[0].domain | replace('.', '') }}", "netham45.org";
+option domain-name "{{ dns_domain_name }}";
+option domain-search "{{ dns_search_paths | join(', ') }}";
 
 # Subnets
 {% for subnet in dhcp_subnets %}
