@@ -93,12 +93,14 @@ dns_unbound_interfaces:
   - 192.168.4.7
   - 192.168.5.7
   - 192.168.6.7
+  - 192.168.251.7
 dns_access_control:
   - "192.168.0.0/24"
   - "192.168.3.0/24"
   - "192.168.4.0/24"
   - "192.168.5.0/24"
   - "192.168.6.0/24"
+  - "192.168.251.0/24"
 dns_host_overrides:
   - name: "homeassistant.netham45.org."
     ip: "192.168.3.144"
@@ -114,7 +116,7 @@ dns_domain_overrides:
 # WireGuard Configuration
 wireguard_private_key: "{{ lookup('file', '.secrets/wireguard_private_key') }}"
 wireguard_listen_port: 51820
-wireguard_address: 192.168.251.3/24
+wireguard_address: 192.168.251.7/24
 wireguard_subnet: 192.168.251.0/24
 wireguard_peers:
   - public_key: "{{ lookup('file', '.secrets/wireguard_public_key') }}"
