@@ -16,6 +16,9 @@ server:
   # Performance
   prefetch: yes
 
+  # DHCP Records
+  include: /etc/unbound/dhcp-records.d/*.conf
+
   # Host Overrides
 {% for host in dns_host_overrides %}
 {% if host %}

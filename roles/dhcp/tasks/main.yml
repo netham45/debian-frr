@@ -4,6 +4,22 @@
     name: isc-dhcp-server
     state: present
 
+- name: Create Unbound DHCP records directory
+  file:
+    path: /etc/unbound/dhcp-records.d
+    state: directory
+    owner: unbound
+    group: unbound
+    mode: '0755'
+
+- name: Deploy DHCP to DNS update script
+  template:
+    src: update-dns.sh.j2
+    dest: /usr/local/bin/update-dns.sh
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Configure DHCP server to listen on correct interfaces
   template:
     src: isc-dhcp-server.j2

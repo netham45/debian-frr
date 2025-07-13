@@ -7,6 +7,8 @@ table inet firewall {
 
         # Define private networks
         define NET_PRIVATE = { 192.168.0.0/24, 192.168.3.0/24, 192.168.4.0/24, 192.168.5.0/24, 192.168.6.0/24, 192.168.251.0/24 }
+        define NET_FORWARD_ALL = { 192.168.0.0/24, 192.168.251.0/24 }
+        define NET_FORWARD_WAN_ONLY = { 192.168.3.0/24, 192.168.4.0/24 }
 
         # Define cloudflare networks
         set cloudflare_ipv4 {
@@ -22,9 +24,9 @@ table inet firewall {
 
         chain input {
                 type filter hook input priority filter; policy drop;
-                iifname "eth0" tcp dport 22 accept comment "Anti-Lockout SSH Rule"
+                iifname eth0 tcp dport 22 accept comment "Anti-Lockout SSH Rule"
                 ct state { established, related } accept
-                iif "lo" accept
+                iif lo accept
                 ip protocol icmp accept
                 ip6 nexthdr ipv6-icmp accept
                 iifname $DEV_LANS udp dport { 67, 68 } accept comment "Allow DHCP"
@@ -32,21 +34,17 @@ table inet firewall {
                 iifname $DEV_LANS udp dport 53 accept comment "Allow DNS UDP"
                 iifname $DEV_LANS udp dport 123 accept comment "Allow NTP"
                 iifname $DEV_WANS udp dport 51820 accept comment "Allow WireGuard"
-                iifname "eth99" ip protocol ospf accept comment "Allow OSPF"
+                iifname eth99 ip protocol ospf accept comment "Allow OSPF"
         }
 
         chain forward {
-                type filter hook forward priority filter; policy accept;
+                type filter hook forward priority filter; policy drop;
                 # Allow established and related connections
                 ct state { established, related } accept
 
-                # Block specific inter-VLAN traffic first
-                iifname "eth2" oifname { "wg0", "eth0", "eth3", "eth4", "eth5" } drop
-                iifname "eth4" oifname { "wg0", "eth0", "eth2", "eth3", "eth5" } drop
-                iifname "eth5" oifname { "wg0", "eth0", "eth2", "eth3", "eth4" } drop
-                iifname $DEV_LANS accept
-                # Allow all other traffic from internal networks to be forwarded
-                
+                # Allow traffic based on source subnet
+                ip saddr $NET_FORWARD_ALL accept comment "Allow specified subnets to all"
+                ip saddr $NET_FORWARD_WAN_ONLY oifname $DEV_WANS accept
         }
 
         chain postrouting {
@@ -56,8 +54,9 @@ table inet firewall {
 
         chain prerouting_nat {
                 type nat hook prerouting priority dstnat; policy accept;
-                iifname "eth5" ip daddr != 192.168.6.7 udp dport 123 dnat ip to 192.168.6.7:123
-                iifname "eth5" ip daddr != 192.168.6.7 tcp dport 123 dnat ip to 192.168.6.7:123
+                iifname { wg0, eth0, eth2, eth3 } accept
+                iifname eth5 ip daddr != 192.168.6.7 udp dport 123 dnat ip to 192.168.6.7:123
+                iifname eth5 ip daddr != 192.168.6.7 tcp dport 123 dnat ip to 192.168.6.7:123
                 {% for rule in port_forwards %}
                 iifname $DEV_WANS ip saddr {{ rule.forward.allowed_sources }} {{ rule.forward.proto }} dport {{ rule.forward.source_port }} dnat to {{ rule.forward.destination_ip }}:{{ rule.forward.destination_port }}
                 {% endfor %}

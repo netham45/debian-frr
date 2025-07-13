@@ -1,0 +1,55 @@
+#!/bin/bash
+set -e
+
+# Arguments passed from dhcpd.conf
+# $1: action (add, delete)
+# $2: IP address
+# $3: MAC address
+# $4: Hostname (optional)
+
+ACTION=$1
+IP_ADDRESS=$2
+MAC_ADDRESS=$3
+HOSTNAME=$4
+
+# Sanitize MAC address for use as a filename
+FILENAME_MAC=$(echo "$MAC_ADDRESS" | sed 's/:/-/g')
+RECORD_DIR="/etc/unbound/dhcp-records.d"
+RECORD_FILE="${RECORD_DIR}/${FILENAME_MAC}.conf"
+DOMAIN_NAME="{{ dns_domain_name }}"
+
+# Exit if no hostname is provided by the client
+if [ -z "$HOSTNAME" ]; then
+  # If a record for this MAC already exists, remove it.
+  if [ -f "$RECORD_FILE" ]; then
+    rm -f "$RECORD_FILE"
+  fi
+  exit 0
+fi
+
+# Sanitize hostname to prevent injection
+HOSTNAME=$(echo "$HOSTNAME" | sed -e 's/[^a-zA-Z0-9-]//g')
+
+if [ "$ACTION" = "add" ]; then
+  # --- Hostname Conflict Resolution ---
+  # Find and delete any existing records for this hostname from other MACs
+  grep -l "local-data: \"${HOSTNAME}.${DOMAIN_NAME}" ${RECORD_DIR}/*.conf | while read -r conflicting_file; do
+    if [ "$conflicting_file" != "$RECORD_FILE" ]; then
+      rm -f "$conflicting_file"
+    fi
+  done
+
+  # --- Create/Update DNS Record ---
+  echo "local-data: \"${HOSTNAME}.${DOMAIN_NAME} A ${IP_ADDRESS}\"" > "$RECORD_FILE"
+  echo "local-data-ptr: \"${IP_ADDRESS} ${HOSTNAME}.${DOMAIN_NAME}\"" >> "$RECORD_FILE"
+
+elif [ "$ACTION" = "delete" ]; then
+  # --- Delete DNS Record ---
+  if [ -f "$RECORD_FILE" ]; then
+    rm -f "$RECORD_FILE"
+  fi
+fi
+
+# Tell Unbound to reload its configuration to pick up the changes
+# This is non-blocking and will not restart the service.
+unbound-control reload || true
