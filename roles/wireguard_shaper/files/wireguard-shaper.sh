@@ -4,6 +4,7 @@
 WG_INTERFACE="wg0"
 SHAPER_PERCENTAGE=90
 IPERF_STREAMS=10
+IPERF_LENGTH=30
 
 # --- Script Logic ---
 echo "Starting WireGuard shaping run on $WG_INTERFACE..."
@@ -28,7 +29,8 @@ for CLIENT_IP in $CLIENT_IPS; do
     sudo tc class del dev $WG_INTERFACE parent 1: classid 1:1$CLASS_SUFFIX > /dev/null 2>&1
     
     # --- RUN THE TEST ---
-    IPERF_RESULT=$(iperf -M 1200 -c $CLIENT_IP -P $IPERF_STREAMS -t 5 -f m)
+    echo "--- Running $IPERF_LENGTH second iperf test to $CLIENT_IP with $IPERF_STREAMS"
+    IPERF_RESULT=$(iperf -M 1200 -c $CLIENT_IP -P $IPERF_STREAMS -t $IPERF_LENGTH -f m)
     
     RATE=$(echo "$IPERF_RESULT" | grep "SUM" | tail -1 | awk '{print $6}')
 

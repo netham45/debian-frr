@@ -117,9 +117,6 @@ wireguard_private_key: "{{ lookup('file', '.secrets/wireguard_private_key') }}"
 wireguard_listen_port: 51820
 wireguard_address: 192.168.251.7/24
 wireguard_subnet: 192.168.251.0/24
-wireguard_peers:
-  - public_key: "{{ lookup('file', '.secrets/wireguard_public_key') }}"
-    allowed_ips: 192.168.251.2/32
 
 # Dynamic DNS Configuration
 ddns_cloudflare_token: "{{ lookup('file', '.secrets/cloudflare_token') }}"
