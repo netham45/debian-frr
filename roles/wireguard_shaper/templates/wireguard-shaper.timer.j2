@@ -1,0 +1,10 @@
+[Unit]
+Description=Run WireGuard Shaper every 10 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=10min
+Unit=wireguard-shaper.service
+
+[Install]
+WantedBy=timers.target

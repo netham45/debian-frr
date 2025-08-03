@@ -1,0 +1,32 @@
+---
+- name: Install dependencies
+  apt:
+    name:
+      - iperf
+      - bc
+    state: present
+- name: Copy shaper script
+  copy:
+    src: wireguard-shaper.sh
+    dest: /usr/local/bin/wireguard-shaper.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy systemd service
+  template:
+    src: wireguard-shaper.service.j2
+    dest: /etc/systemd/system/wireguard-shaper.service
+  notify: reload systemd
+
+- name: Copy systemd timer
+  template:
+    src: wireguard-shaper.timer.j2
+    dest: /etc/systemd/system/wireguard-shaper.timer
+  notify: reload systemd
+
+- name: Enable and start timer
+  systemd:
+    name: wireguard-shaper.timer
+    enabled: yes
+    state: started

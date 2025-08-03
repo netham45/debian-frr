@@ -4,6 +4,11 @@
     name: wireguard-tools
     state: present
 
+- name: Load WireGuard peer keys
+  include_vars:
+    file: "{{ playbook_dir }}/.secrets/wireguard_keys"
+    name: wireguard_secrets
+
 - name: Configure WireGuard interface
   template:
     src: wg0.conf.j2

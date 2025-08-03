@@ -1,0 +1,17 @@
+---
+- name: Install snmpd
+  apt:
+    name: snmpd
+    state: present
+
+- name: Configure snmpd
+  template:
+    src: snmpd.conf.j2
+    dest: /etc/snmp/snmpd.conf
+  notify: restart snmpd
+
+- name: Ensure snmpd is running and enabled
+  service:
+    name: snmpd
+    state: started
+    enabled: yes

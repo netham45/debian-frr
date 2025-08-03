@@ -93,7 +93,6 @@ dns_unbound_interfaces:
   - 192.168.4.7
   - 192.168.5.7
   - 192.168.6.7
-  - 192.168.251.7
 dns_access_control:
   - "192.168.0.0/24"
   - "192.168.3.0/24"
@@ -152,3 +151,7 @@ port_forwards:
         allowed_sources: "@cloudflare_ipv4"
         destination_ip: 192.168.0.158
         destination_port: 8080
+
+
+# SNMP Configuration
+# snmp_community_string: "your_secret_community_string" # Unset for public

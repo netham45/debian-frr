@@ -9,6 +9,9 @@ table inet firewall {
         define NET_PRIVATE = { 192.168.0.0/24, 192.168.3.0/24, 192.168.4.0/24, 192.168.5.0/24, 192.168.6.0/24, 192.168.251.0/24 }
         define NET_FORWARD_ALL = { 192.168.0.0/24, 192.168.251.0/24 }
         define NET_FORWARD_WAN_ONLY = { 192.168.3.0/24, 192.168.4.0/24 }
+        define HOME_ASSISTANT = { 192.168.5.107/32, 192.168.3.144/32 }
+        define MQTT_PORTS = { 1883, 8883 }
+        define MQTT_SERVER = 192.168.0.164
 
         # Define cloudflare networks
         set cloudflare_ipv4 {
@@ -34,6 +37,7 @@ table inet firewall {
                 iifname $DEV_LANS udp dport 53 accept comment "Allow DNS UDP"
                 iifname $DEV_LANS udp dport 123 accept comment "Allow NTP"
                 iifname $DEV_WANS udp dport 51820 accept comment "Allow WireGuard"
+                iifname $DEV_LANS udp dport 161 accept comment "Allow SNMP"
                 iifname eth99 ip protocol ospf accept comment "Allow OSPF"
         }
 
@@ -43,8 +47,12 @@ table inet firewall {
                 ct state { established, related } accept
 
                 # Allow traffic based on source subnet
-                ip saddr $NET_FORWARD_ALL accept comment "Allow specified subnets to all"
-                ip saddr $NET_FORWARD_WAN_ONLY oifname $DEV_WANS accept
+                ip saddr $NET_FORWARD_ALL accept comment "Allow specified subnets to all" # WG, management lan to all
+                ip saddr $NET_FORWARD_WAN_ONLY oifname $DEV_WANS accept # Guest, VM vlan internet
+                {% for rule in port_forwards -%}
+                ip saddr {{ rule.forward.allowed_sources }} {{ rule.forward.proto }} dport {{ rule.forward.destination_port }} accept
+                {% endfor -%}
+                ip saddr $HOME_ASSISTANT ip daddr $MQTT_SERVER tcp dport $MQTT_PORTS accept # Home Assistant to Frigate MQTT
         }
 
         chain postrouting {
@@ -57,8 +65,8 @@ table inet firewall {
                 iifname { wg0, eth0, eth2, eth3 } accept
                 iifname eth5 ip daddr != 192.168.6.7 udp dport 123 dnat ip to 192.168.6.7:123
                 iifname eth5 ip daddr != 192.168.6.7 tcp dport 123 dnat ip to 192.168.6.7:123
-                {% for rule in port_forwards %}
+                {% for rule in port_forwards -%}
                 iifname $DEV_WANS ip saddr {{ rule.forward.allowed_sources }} {{ rule.forward.proto }} dport {{ rule.forward.source_port }} dnat to {{ rule.forward.destination_ip }}:{{ rule.forward.destination_port }}
-                {% endfor %}
+                {% endfor -%}
         }
 }

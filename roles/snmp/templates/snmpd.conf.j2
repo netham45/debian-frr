@@ -1,0 +1,5 @@
+# Listen for SNMP requests on all interfaces
+agentAddress udp:161
+
+# Allow read-only access with a community string
+rocommunity {{ snmp_community_string | default('public') }}
